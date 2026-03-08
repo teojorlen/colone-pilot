@@ -1,0 +1,149 @@
+#!/bin/bash
+# ════════════════════════════════════════════════════════════════════════════
+# Local AI Configuration - Linux
+# ════════════════════════════════════════════════════════════════════════════
+#
+# FIRST TIME SETUP:
+# 1. Copy this file: cp config.sh.example config.sh
+# 2. Customize the paths below (defaults work for most users)
+# 3. Run setup: ./setup.sh
+#
+# OR use the interactive setup wizard: ./setup-config.sh
+#
+# ⚠️  DO NOT commit your customized config.sh to version control!
+#     It may contain personal paths and is automatically git-ignored.
+#
+# ════════════════════════════════════════════════════════════════════════════
+
+# ── Installation Paths ──────────────────────────────────────────────────────
+
+# Base directory for all AI-related files
+# Default: ~/.local/share/localai (no sudo needed, per-user)
+# Alternative: /opt/localai (system-wide, requires sudo)
+BASE_DIR="${HOME}/.local/share/localai"
+
+# If you prefer /opt/localai (legacy/system-wide), uncomment this:
+# BASE_DIR="/opt/localai"
+
+# Derived paths (auto-calculated from BASE_DIR)
+MODELS_DIR="${BASE_DIR}/models"   # Where GGUF model files are stored
+CONFIG_DIR="${BASE_DIR}/config"   # Where LocalAI config files are stored
+LOG_DIR="${BASE_DIR}/logs"        # Where log files are written
+
+# ── Docker Configuration ────────────────────────────────────────────────────
+
+# Docker image and tag
+DOCKER_IMAGE="quay.io/go-skynet/local-ai"
+DOCKER_TAG="latest"
+
+# Ports to expose
+HTTP_PORT=8080
+GRPC_PORT=5000
+
+# Security: Run container as non-root user (defaults to current user)
+DOCKER_UID="$(id -u)"
+DOCKER_GID="$(id -g)"
+
+# CPU threads (adjust based on your system)
+THREADS="$(nproc)"
+
+# ── GPU Configuration ───────────────────────────────────────────────────────
+
+# Enable GPU acceleration (requires ROCm for AMD GPUs)
+USE_GPU=true
+
+# GPU devices to expose to container (AMD-specific)
+GPU_DEVICES="/dev/kfd:/dev/kfd /dev/dri:/dev/dri"
+
+# ── Model Configuration ─────────────────────────────────────────────────────
+
+# Default models to download
+CHAT_MODEL="mistral-7b-instruct.Q4_K_M.gguf"
+COMPLETION_MODEL="codellama-13b.Q4_K_M.gguf"
+
+# Context sizes (in tokens)
+CHAT_CONTEXT_SIZE=8192         # For conversations (larger for history)
+COMPLETION_CONTEXT_SIZE=2048   # For autocomplete (smaller for speed)
+
+# Model download URLs (HuggingFace)
+MISTRAL_URL="https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+CODELLAMA_URL="https://huggingface.co/TheBloke/CodeLlama-13B-GGUF/resolve/main/codellama-13b.Q4_K_M.gguf"
+
+# ── Security & Validation ───────────────────────────────────────────────────
+
+# Verify SHA256 checksums after download (recommended but slower)
+VERIFY_CHECKSUMS=false
+
+# Known good SHA256 checksums (update these when downloading new versions)
+declare -A CHECKSUMS=(
+    ["mistral-7b-instruct.Q4_K_M.gguf"]=""   # Add checksum here
+    ["codellama-13b.Q4_K_M.gguf"]=""         # Add checksum here
+)
+
+# ── Legacy Migration ────────────────────────────────────────────────────────
+
+# If you're migrating from old hardcoded paths, setup will detect and migrate
+LEGACY_MODELS_DIR="${HOME}/models"
+LEGACY_CONFIG_DIR="${HOME}/config"
+
+# ════════════════════════════════════════════════════════════════════════════
+# DO NOT EDIT BELOW THIS LINE (unless you know what you're doing)
+# ════════════════════════════════════════════════════════════════════════════
+
+# Validation function
+validate_config() {
+    local errors=()
+    
+    # Validate ports
+    if [[ $HTTP_PORT -lt 1024 || $HTTP_PORT -gt 65535 ]]; then
+        errors+=("HTTP_PORT must be between 1024-65535")
+    fi
+    
+    if [[ $GRPC_PORT -lt 1024 || $GRPC_PORT -gt 65535 ]]; then
+        errors+=("GRPC_PORT must be between 1024-65535")
+    fi
+    
+    if [[ $HTTP_PORT -eq $GRPC_PORT ]]; then
+        errors+=("HTTP_PORT and GRPC_PORT must be different")
+    fi
+    
+    # Validate BASE_DIR is valid path
+    if [[ -z "$BASE_DIR" ]]; then
+        errors+=("BASE_DIR cannot be empty")
+    fi
+    
+    # Report errors
+    if [[ ${#errors[@]} -gt 0 ]]; then
+        echo "Configuration validation failed:" >&2
+        printf '%s\n' "${errors[@]}" >&2
+        return 1
+    fi
+    
+    return 0
+}
+
+# Export all configuration variables
+export BASE_DIR MODELS_DIR CONFIG_DIR LOG_DIR
+export DOCKER_IMAGE DOCKER_TAG DOCKER_UID DOCKER_GID HTTP_PORT GRPC_PORT THREADS
+export USE_GPU GPU_DEVICES
+export CHAT_MODEL COMPLETION_MODEL
+export CHAT_CONTEXT_SIZE COMPLETION_CONTEXT_SIZE
+export MISTRAL_URL CODELLAMA_URL
+export VERIFY_CHECKSUMS
+export LEGACY_MODELS_DIR LEGACY_CONFIG_DIR
+
+# Export checksums array (bash specific)
+for key in "${!CHECKSUMS[@]}"; do
+    export "CHECKSUM_${key//[^a-zA-Z0-9]/_}=${CHECKSUMS[$key]}"
+done
+
+# Run validation
+if ! validate_config; then
+    echo "Error: Invalid configuration. Please fix errors above." >&2
+    return 1 2>/dev/null || exit 1
+fi
+
+# Success message (only in verbose mode)
+if [[ "${VERBOSE:-}" == "true" ]]; then
+    echo "LocalAI configuration loaded successfully from: ${BASH_SOURCE[0]}"
+fi

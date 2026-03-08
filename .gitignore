@@ -1,0 +1,124 @@
+# Local AI Project - Git Ignore
+
+# ============================================================================
+# Sensitive Files - NEVER COMMIT
+# ============================================================================
+
+# GitHub tokens and API keys
+.env
+.env.local
+*.key
+*.pem
+secrets.yaml
+secrets.json
+
+# User configuration files (contain personal paths and settings)
+windows/config.ps1
+linux/config.sh
+
+# ============================================================================
+# User-Specific Files
+# ============================================================================
+
+# VS Code workspace settings (can contain user paths)
+.vscode/settings.json
+.vscode/launch.json
+
+# Continue extension data (contains user-specific configs)
+.continue/
+*.continue/
+
+# User-specific IDE files
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================================================================
+# Temporary and Build Files
+# ============================================================================
+
+# Logs
+*.log
+logs/
+C:/AI/logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================================================
+# Model Files and Data - TOO LARGE FOR GIT
+# ============================================================================
+
+# GGUF model files (multi-GB files)
+*.gguf
+models/
+C:/AI/models/
+
+# LlamaCpp binaries (large, platform-specific)
+llama-server.exe
+llama-server
+llama.cpp/
+C:/AI/llama.cpp/
+
+# Docker volumes
+docker-volumes/
+*.sqlite
+*.db
+
+# ============================================================================
+# Testing and Development
+# ============================================================================
+
+# Test outputs
+test-output/
+coverage/
+.pytest_cache/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# ============================================================================
+# OS-Specific
+# ============================================================================
+
+# Windows
+*.lnk
+$RECYCLE.BIN/
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Linux
+.Trash-*/
+.nfs*
+
+# ============================================================================
+# Documentation (Optional - comment out if you want to track these)
+# ============================================================================
+
+# Remove this section if you want to track local notes
+# PLAN.md
+# CONTEXT.md
+# notes.md

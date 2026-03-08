@@ -1,0 +1,67 @@
+# SHA256 Checksums for Downloaded Files
+#
+# This file contains known-good SHA256 checksums for model files and binaries.
+# Update these when downloading new versions.
+#
+# To verify a file:
+#   Windows: (Get-FileHash -Path <file> -Algorithm SHA256).Hash
+#   Linux:   sha256sum <file>
+#
+# Format: <checksum> <filename>
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GGUF Model Files (HuggingFace TheBloke)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Mistral 7B Instruct v0.2 Q4_K_M (~4.4 GB)
+# URL: https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF
+# Last verified: 2026-03-08
+# Size: 4,368,438,944 bytes
+mistral-7b-instruct-v0.2.Q4_K_M.gguf VERIFY_AFTER_DOWNLOAD
+
+# CodeLlama 13B Q4_K_M (~7.3 GB)  
+# URL: https://huggingface.co/TheBloke/CodeLlama-13B-GGUF
+# Last verified: 2026-03-08
+# Size: 7,365,960,224 bytes
+codellama-13b.Q4_K_M.gguf VERIFY_AFTER_DOWNLOAD
+
+# ═══════════════════════════════════════════════════════════════════════════
+# llama.cpp Binaries (GitHub Releases)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# NOTE: llama.cpp releases change frequently. Checksums are version-specific.
+# Always verify the checksum against the specific release you're downloading.
+#
+# GitHub releases page: https://github.com/ggerganov/llama.cpp/releases
+#
+# Example for a specific release:
+# llama-b1234-bin-win-vulkan-x64.zip VERIFY_AFTER_DOWNLOAD
+
+# ═══════════════════════════════════════════════════════════════════════════
+# How to Update Checksums
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# 1. Download the file
+# 2. Calculate its SHA256:
+#    Windows:  (Get-FileHash -Path <file> -Algorithm SHA256).Hash
+#    Linux:    sha256sum <file>
+# 3. Update this file with the new checksum
+# 4. Enable verification in config.ps1 or config.sh:
+#    $VerifyChecksums = $true  (Windows)
+#    VERIFY_CHECKSUMS=true     (Linux)
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# Security Note
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Checksum verification protects against:
+# - Corrupted downloads
+# - Man-in-the-middle attacks
+# - Compromised upstream sources
+#
+# However, it requires you to trust the checksums in this file.
+# For maximum security:
+# 1. Verify checksums from multiple independent sources
+# 2. Check GPG signatures when available
+# 3. Only download from official sources (GitHub, HuggingFace)
+#

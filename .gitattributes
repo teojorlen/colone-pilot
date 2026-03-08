@@ -1,0 +1,86 @@
+# Git Attributes - Line Ending Configuration
+# This ensures consistent line endings across Windows and Linux
+
+# ============================================================================
+# Default Behavior
+# ============================================================================
+
+# Auto-normalize all text files to LF on commit
+# This prevents CRLF from being committed to the repository
+* text=auto eol=lf
+
+# ============================================================================
+# Scripts (CRITICAL - enforce LF)
+# ============================================================================
+
+# Shell scripts MUST use LF (required by bash/sh on Linux)
+*.sh text eol=lf
+
+# PowerShell scripts use LF (PowerShell 3+ supports LF on Windows)
+*.ps1 text eol=lf
+
+# ============================================================================
+# Documentation and Config Files
+# ============================================================================
+
+# Markdown files
+*.md text eol=lf
+
+# YAML configuration
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Text files
+*.txt text eol=lf
+
+# Config examples
+*.example text eol=lf
+
+# ============================================================================
+# Binary Files (do not normalize)
+# ============================================================================
+
+# Model files (GGUF format)
+*.gguf binary
+
+# Executables and libraries
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.bin binary
+
+# Archives
+*.zip binary
+*.tar binary
+*.gz binary
+*.tgz binary
+*.7z binary
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.bmp binary
+
+# ============================================================================
+# Notes
+# ============================================================================
+#
+# Why LF everywhere?
+# 1. Shell scripts (.sh) require LF - they fail with CRLF on Linux
+# 2. Modern PowerShell (v3+) works fine with LF on Windows
+# 3. Git diffs are cleaner without CRLF noise
+# 4. Consistency across all platforms
+#
+# This file ensures:
+# - Repository always stores LF
+# - Windows users can check out with LF (recommended)
+# - Cross-platform development works seamlessly
+#
+# If you need CRLF locally on Windows:
+#   git config core.autocrlf false  (recommended - use LF everywhere)
+#   git config core.autocrlf true   (converts to CRLF on checkout)
+#

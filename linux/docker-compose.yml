@@ -1,0 +1,40 @@
+# Base (CPU-only) configuration.
+# For GPU acceleration, docker-compose.gpu.yml is merged on top by start-backend.sh
+# when /dev/kfd is present (ROCm kernel module loaded).
+
+services:
+  localai:
+    image: ${DOCKER_IMAGE:-localai/localai}:${DOCKER_TAG:-latest-aio-cpu}
+    container_name: local-ai
+    # Security: Run as non-root user
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    ports:
+      - "${HTTP_PORT:-8080}:8080" # HTTP API (OpenAI-compatible)
+      - "${GRPC_PORT:-5000}:5000" # gRPC port
+    volumes:
+      - ${MODELS_DIR:-./models}:/models
+      - ${CONFIG_DIR:-./config}:/data
+    environment:
+      # CPU threads (from config or default)
+      - THREADS=${THREADS:-24}
+      - MODEL_PATH=/models
+      - LOCALAI_API_PORT=8080
+      - LOCALAI_GRPC_PORT=5000
+      - LOCALAI_HEALTHCHECK=true
+      - LOG_LEVEL=info
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+    read_only: false  # LocalAI needs write access to /data for model caching
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/readyz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s   # allow time for first-run model downloads
+    restart: unless-stopped

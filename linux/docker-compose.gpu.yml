@@ -1,0 +1,14 @@
+# GPU overlay — merged on top of docker-compose.yml by start-backend.sh
+# when /dev/kfd exists (ROCm kernel module is loaded).
+# Install ROCm: https://rocm.docs.amd.com/en/latest/Installation_Guide/Installation-Guide.html
+
+services:
+  localai:
+    image: ${DOCKER_IMAGE:-localai/localai}:${DOCKER_TAG:-latest-gpu-hipblas}
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+    environment:
+      - ROCM_VISIBLE_DEVICES=0

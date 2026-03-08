@@ -1,0 +1,158 @@
+# ════════════════════════════════════════════════════════════════════════════
+# Local AI Configuration - Windows
+# ════════════════════════════════════════════════════════════════════════════
+#
+# FIRST TIME SETUP:
+# 1. Copy this file: cp config.ps1.example config.ps1
+# 2. Customize the paths below (defaults work for most users)
+# 3. Run setup: .\setup-windows.ps1
+#
+# OR use the interactive setup wizard: .\setup-config.ps1
+#
+# ⚠️  DO NOT commit your customized config.ps1 to version control!
+#     It may contain personal paths and is automatically git-ignored.
+#
+# ════════════════════════════════════════════════════════════════════════════
+
+# ── Installation Paths ──────────────────────────────────────────────────────
+
+# Base directory for all AI-related files
+# Default: C:\Users\<YourUsername>\AppData\Local\LocalAI (no admin needed)
+# Alternative: C:\AI (requires admin for initial setup, system-wide)
+$BaseDir = "$env:LOCALAPPDATA\LocalAI"
+
+# If you prefer C:\AI (legacy location), uncomment this:
+# $BaseDir = "C:\AI"
+
+# Derived paths (auto-calculated from BaseDir)
+$LlamaCppDir = "$BaseDir\llama.cpp"   # Where llama-server.exe is installed
+$ModelsDir = "$BaseDir\models"        # Where GGUF model files are stored
+$LogDir = "$BaseDir\logs"             # Where log files are written
+
+# ── Server Configuration ────────────────────────────────────────────────────
+
+# Ports for single/dual backend
+$ChatPort = 8080           # Used by Mistral (chat)
+$CompletionPort = 8081     # Used by CodeLlama (autocomplete)
+
+# GPU configuration
+$GpuLayers = 40            # Layers offloaded to GPU (40=balanced, 99=max)
+
+# Context sizes (in tokens)
+$ChatContextSize = 8192           # For conversations (larger for history)
+$CompletionContextSize = 2048     # For autocomplete (smaller for speed)
+
+# CPU threads (default: auto-detect from system)
+$Threads = [int]$env:NUMBER_OF_PROCESSORS
+
+# ── Model Files ─────────────────────────────────────────────────────────────
+
+# Model filenames (must exist in ModelsDir after download)
+$ChatModel = "mistral-7b-instruct.Q4_K_M.gguf"
+$CompletionModel = "codellama-13b.Q4_K_M.gguf"
+
+# ── Download Configuration ──────────────────────────────────────────────────
+
+# llama.cpp download settings
+$LlamaCppReleaseUrl = "https://github.com/ggerganov/llama.cpp/releases"
+$LlamaCppDownloadPattern = "llama-*-bin-win-vulkan-x64.zip"
+
+# Model download URLs (HuggingFace)
+$MistralUrl = "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
+$CodeLlamaUrl = "https://huggingface.co/TheBloke/CodeLlama-13B-GGUF/resolve/main/codellama-13b.Q4_K_M.gguf"
+
+# ── Security & Validation ───────────────────────────────────────────────────
+
+# Verify SHA256 checksums after downloads (recommended but slower)
+$VerifyChecksums = $false
+
+# Known good SHA256 checksums (update these when downloading new versions)
+$Checksums = @{
+    "mistral-7b-instruct.Q4_K_M.gguf" = ""  # Add checksum here
+    "codellama-13b.Q4_K_M.gguf" = ""        # Add checksum here
+}
+
+# ── WSL Integration (Optional) ──────────────────────────────────────────────
+
+# If you have models in WSL and want to reference them, configure these:
+$WSLDistro = "Ubuntu"                # Your WSL distribution name
+$WSLUsername = $env:USERNAME         # Your WSL username (often same as Windows)
+$WSLModelsPath = "\\wsl$\$WSLDistro\home\$WSLUsername\models"
+
+# ── Legacy Migration ────────────────────────────────────────────────────────
+
+# If you're migrating from the old C:\AI setup, the setup script will detect
+# and offer to migrate your existing files automatically.
+$LegacyBaseDir = "C:\AI"
+
+# ════════════════════════════════════════════════════════════════════════════
+# DO NOT EDIT BELOW THIS LINE (unless you know what you're doing)
+# ════════════════════════════════════════════════════════════════════════════
+
+# Package everything into a config object
+$Config = @{
+    BaseDir = $BaseDir
+    LlamaCppDir = $LlamaCppDir
+    ModelsDir = $ModelsDir
+    LogDir = $LogDir
+    ChatPort = $ChatPort
+    CompletionPort = $CompletionPort
+    GpuLayers = $GpuLayers
+    ChatContextSize = $ChatContextSize
+    CompletionContextSize = $CompletionContextSize
+    Threads = $Threads
+    ChatModel = $ChatModel
+    CompletionModel = $CompletionModel
+    LlamaCppReleaseUrl = $LlamaCppReleaseUrl
+    LlamaCppDownloadPattern = $LlamaCppDownloadPattern
+    MistralUrl = $MistralUrl
+    CodeLlamaUrl = $CodeLlamaUrl
+    VerifyChecksums = $VerifyChecksums
+    Checksums = $Checksums
+    WSLDistro = $WSLDistro
+    WSLUsername = $WSLUsername
+    WSLModelsPath = $WSLModelsPath
+    LegacyBaseDir = $LegacyBaseDir
+}
+
+# Validation function
+function Test-LocalAIConfig {
+    $errors = @()
+    
+    # Validate ports
+    if ($Config.ChatPort -lt 1024 -or $Config.ChatPort -gt 65535) {
+        $errors += "ChatPort must be between 1024-65535"
+    }
+    if ($Config.CompletionPort -lt 1024 -or $Config.CompletionPort -gt 65535) {
+        $errors += "CompletionPort must be between 1024-65535"
+    }
+    if ($Config.ChatPort -eq $Config.CompletionPort) {
+        $errors += "ChatPort and CompletionPort must be different"
+    }
+    
+    # Validate BaseDir is valid path format
+    try {
+        $null = [System.IO.Path]::GetFullPath($Config.BaseDir)
+    }
+    catch {
+        $errors += "BaseDir is not a valid path: $($Config.BaseDir)"
+    }
+    
+    if ($errors.Count -gt 0) {
+        Write-Error "Configuration validation failed:`n$($errors -join "`n")"
+        return $false
+    }
+    
+    return $true
+}
+
+# Export to global scope (makes it available to scripts that dot-source this)
+$Global:LocalAIConfig = $Config
+$Global:TestLocalAIConfig = ${function:Test-LocalAIConfig}
+
+# Run validation
+if (-not (Test-LocalAIConfig)) {
+    throw "Invalid configuration. Please fix errors above."
+}
+
+Write-Verbose "LocalAI configuration loaded successfully from: $PSCommandPath"
