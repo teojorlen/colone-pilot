@@ -99,6 +99,22 @@ coverage/
 *.old
 
 # ============================================================================
+# MCP Server (Python)
+# ============================================================================
+
+# Virtual environment created by uv
+mcp-server/.venv/
+
+# Python bytecode and caches
+mcp-server/__pycache__/
+mcp-server/**/__pycache__/
+mcp-server/**/*.pyc
+mcp-server/**/*.pyo
+
+# uv lock file (pin for reproducible installs — keep if you want pinned deps)
+# mcp-server/uv.lock
+
+# ============================================================================
 # OS-Specific
 # ============================================================================
 

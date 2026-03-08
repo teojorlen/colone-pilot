@@ -45,6 +45,11 @@ $CompletionContextSize = 2048     # For autocomplete (smaller for speed)
 # CPU threads (default: auto-detect from system)
 $Threads = [int]$env:NUMBER_OF_PROCESSORS
 
+# Enable log files (written to LogDir)
+# Set to $true to write llama-server stdout to $LogDir\mistral.log / codellama.log
+# Required for tail_logs in the MCP server
+$EnableLogging = $false
+
 # ── Model Files ─────────────────────────────────────────────────────────────
 
 # Model filenames (must exist in ModelsDir after download)
@@ -109,6 +114,7 @@ $Config = @{
     CodeLlamaUrl = $CodeLlamaUrl
     VerifyChecksums = $VerifyChecksums
     Checksums = $Checksums
+    EnableLogging = $EnableLogging
     WSLDistro = $WSLDistro
     WSLUsername = $WSLUsername
     WSLModelsPath = $WSLModelsPath

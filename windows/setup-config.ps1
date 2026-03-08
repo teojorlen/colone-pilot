@@ -1,4 +1,4 @@
-# setup-config.ps1
+﻿# setup-config.ps1
 # Interactive configuration wizard for Local AI Windows setup
 # Creates a customized config.ps1 based on user preferences and system detection
 

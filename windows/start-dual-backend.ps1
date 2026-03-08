@@ -25,7 +25,10 @@ param(
     [int]$CompletionCtxSize = -1,
     
     # CPU threads (overrides config)
-    [int]$Threads = -1
+    [int]$Threads = -1,
+
+    # Skip interactive prompts and stop any existing servers automatically
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
@@ -94,13 +97,20 @@ if ($portChat -or $portCompletion) {
     if ($portChat) { Write-Host "  Port $chatPort (Mistral)" -ForegroundColor Yellow }
     if ($portCompletion) { Write-Host "  Port $completionPort (CodeLlama)" -ForegroundColor Yellow }
     Write-Host ""
-    $ans = Read-Host "Stop existing servers and continue? [y/N]"
-    if ($ans -eq 'y') {
+    if ($Force) {
+        Write-Host "  -Force specified: stopping existing servers..." -ForegroundColor Yellow
         & "$PSScriptRoot\stop-backend-windows.ps1"
         Start-Sleep -Seconds 2
     }
     else {
-        exit 1
+        $ans = Read-Host "Stop existing servers and continue? [y/N]"
+        if ($ans -eq 'y') {
+            & "$PSScriptRoot\stop-backend-windows.ps1"
+            Start-Sleep -Seconds 2
+        }
+        else {
+            exit 1
+        }
     }
 }
 
@@ -117,11 +127,20 @@ $mistralArgs = @(
     '--ctx-size', $ChatCtxSize
     '--threads', $Threads
     '--n-gpu-layers', $GpuLayers
-    '--log-disable'
     # Let llama.cpp auto-detect chat template from model metadata
 )
 
-Start-Process -FilePath $ServerExe -ArgumentList $mistralArgs -WindowStyle Minimized
+if (-not $LocalAIConfig.EnableLogging) {
+    $mistralArgs += '--log-disable'
+}
+
+$mistralStartParams = @{ FilePath = $ServerExe; ArgumentList = $mistralArgs; WindowStyle = 'Minimized' }
+if ($LocalAIConfig.EnableLogging) {
+    $null = New-Item -ItemType Directory -Path $LocalAIConfig.LogDir -Force
+    $mistralStartParams['RedirectStandardOutput'] = Join-Path $LocalAIConfig.LogDir 'mistral.log'
+    $mistralStartParams['RedirectStandardError'] = Join-Path $LocalAIConfig.LogDir 'mistral-error.log'
+}
+Start-Process @mistralStartParams
 
 Write-Host "  Started Mistral on http://localhost:$chatPort" -ForegroundColor Green
 Write-Host ""
@@ -142,10 +161,19 @@ $codeLlamaArgs = @(
     '--ctx-size', $CompletionCtxSize
     '--threads', $Threads
     '--n-gpu-layers', $GpuLayers
-    '--log-disable'
 )
 
-Start-Process -FilePath $ServerExe -ArgumentList $codeLlamaArgs -WindowStyle Minimized
+if (-not $LocalAIConfig.EnableLogging) {
+    $codeLlamaArgs += '--log-disable'
+}
+
+$codeLlamaStartParams = @{ FilePath = $ServerExe; ArgumentList = $codeLlamaArgs; WindowStyle = 'Minimized' }
+if ($LocalAIConfig.EnableLogging) {
+    $null = New-Item -ItemType Directory -Path $LocalAIConfig.LogDir -Force
+    $codeLlamaStartParams['RedirectStandardOutput'] = Join-Path $LocalAIConfig.LogDir 'codellama.log'
+    $codeLlamaStartParams['RedirectStandardError'] = Join-Path $LocalAIConfig.LogDir 'codellama-error.log'
+}
+Start-Process @codeLlamaStartParams
 
 Write-Host "  Started CodeLlama on http://localhost:$completionPort" -ForegroundColor Green
 Write-Host ""

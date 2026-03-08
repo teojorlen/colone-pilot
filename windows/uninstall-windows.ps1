@@ -1,4 +1,4 @@
-# uninstall-windows.ps1 — Remove local-ai Windows installation
+﻿# uninstall-windows.ps1 — Remove local-ai Windows installation
 # Stops services, removes scheduled tasks, and optionally deletes downloaded files
 
 $ErrorActionPreference = "Continue"
@@ -30,8 +30,8 @@ else {
     $newBaseDir = "$env:LOCALAPPDATA\LocalAI"
     $alternativeDirs = @{
         LlamaCpp = "$newBaseDir\llama.cpp"
-        Models = "$newBaseDir\models"
-        Log = "$newBaseDir\logs"
+        Models   = "$newBaseDir\models"
+        Log      = "$newBaseDir\logs"
     }
 }
 
@@ -54,11 +54,13 @@ if ($processes) {
         try {
             Stop-Process -Id $proc.Id -Force
             Write-Host "  [stopped] PID $($proc.Id)" -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "  [failed] PID $($proc.Id): $_" -ForegroundColor Red
         }
     }
-} else {
+}
+else {
     Write-Host "  [OK] No running processes found" -ForegroundColor Green
 }
 
@@ -82,12 +84,14 @@ foreach ($taskName in $TaskNames) {
                 Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
                 Write-Host "  [removed] Scheduled task: $taskName" -ForegroundColor Green
                 $removedAny = $true
-            } else {
+            }
+            else {
                 Write-Host "  [WARNING] Administrator privileges required to remove scheduled task" -ForegroundColor Yellow
                 Write-Host "  Run as Administrator to fully uninstall, or manually remove with:" -ForegroundColor Yellow
                 Write-Host "    Unregister-ScheduledTask -TaskName '$taskName' -Confirm:`$false" -ForegroundColor White
             }
-        } catch {
+        }
+        catch {
             Write-Host "  [failed] Could not remove task '$taskName': $_" -ForegroundColor Red
         }
     }
@@ -98,12 +102,6 @@ if (-not $removedAny) {
     if (-not $task) {
         Write-Host "  [OK] No scheduled tasks found" -ForegroundColor Green
     }
-}
-    } catch {
-        Write-Host "  [failed] Could not remove scheduled task: $_" -ForegroundColor Red
-    }
-} else {
-    Write-Host "  [OK] No scheduled task found" -ForegroundColor Green
 }
 
 Write-Host ""
@@ -125,13 +123,14 @@ $totalSize = 0
 foreach ($dir in $dirsToCheck) {
     if (Test-Path $dir.Path) {
         $size = (Get-ChildItem -Path $dir.Path -Recurse -File -ErrorAction SilentlyContinue | 
-                 Measure-Object -Property Length -Sum).Sum
+            Measure-Object -Property Length -Sum).Sum
         $sizeMB = [math]::Round($size / 1MB, 1)
         
         Write-Host "  [found] $($dir.Description): $($dir.Path) ($sizeMB MB)" -ForegroundColor Yellow
         $existingDirs += $dir
         $totalSize += $size
-    } else {
+    }
+    else {
         Write-Host "  [skip] $($dir.Description): not found" -ForegroundColor Gray
     }
 }
@@ -151,7 +150,8 @@ if ($existingDirs.Count -gt 0) {
                 Write-Host "  Removing: $($dir.Path)..." -ForegroundColor Yellow
                 Remove-Item -Path $dir.Path -Recurse -Force
                 Write-Host "  [removed] $($dir.Description)" -ForegroundColor Green
-            } catch {
+            }
+            catch {
                 Write-Host "  [failed] Could not remove $($dir.Description): $_" -ForegroundColor Red
             }
         }
@@ -161,18 +161,21 @@ if ($existingDirs.Count -gt 0) {
             try {
                 Remove-Item -Path $AIDir -Force
                 Write-Host "  [removed] $AIDir (empty directory)" -ForegroundColor Green
-            } catch {
+            }
+            catch {
                 # Silently ignore - not critical
             }
         }
-    } else {
+    }
+    else {
         Write-Host ""
         Write-Host "  [skip] Files kept. You can manually delete them later:" -ForegroundColor Yellow
         foreach ($dir in $existingDirs) {
             Write-Host "    Remove-Item -Recurse -Force '$($dir.Path)'" -ForegroundColor White
         }
     }
-} else {
+}
+else {
     Write-Host "  [OK] No files to remove" -ForegroundColor Green
 }
 

@@ -1,4 +1,4 @@
-# test-installation.ps1 — Validate Windows Installation
+﻿# test-installation.ps1 — Validate Windows Installation
 # Verifies that the local AI setup is properly configured
 
 $ErrorActionPreference = "Stop"
